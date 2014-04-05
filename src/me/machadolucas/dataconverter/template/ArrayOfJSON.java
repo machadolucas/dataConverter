@@ -25,8 +25,9 @@ public class ArrayOfJSON {
 		for (JSONObject object : objects) {
 			str.append(object.toString()).append(",");
 		}
-		String result = str.substring(0, str.length() - 1) + "]";
-		return result;
+		str.setLength(str.length() - 1);
+		str.append("]");
+		return str.toString();
 	}
 
 }

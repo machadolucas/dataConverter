@@ -5,7 +5,7 @@ import java.util.List;
 
 public class JSONObject {
 
-	private List<JSONPair> pairs = new ArrayList<JSONPair>();
+	private final List<JSONPair> pairs = new ArrayList<JSONPair>();
 
 	public void addPair(JSONPair pair) {
 		this.pairs.add(pair);
@@ -17,7 +17,8 @@ public class JSONObject {
 		for (JSONPair pair : pairs) {
 			str.append(pair.toString()).append(",");
 		}
-		String result = str.substring(0, str.length() - 1) + "}";
-		return result;
+		str.setLength(str.length() - 1);
+		str.append("}");
+		return str.toString();
 	}
 }

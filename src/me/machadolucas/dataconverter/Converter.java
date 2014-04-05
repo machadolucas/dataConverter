@@ -1,6 +1,13 @@
 package me.machadolucas.dataconverter;
 
+import java.util.HashMap;
 import java.util.InputMismatchException;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import me.machadolucas.dataconverter.template.ArrayOfJSON;
 import me.machadolucas.dataconverter.template.JSONObject;
@@ -72,7 +79,11 @@ public class Converter {
 	 *         example: "COLUMN1,COLUMN2\ndataX1,dataX2\ndataY1,dataY2"
 	 */
 	public String jsonToCsv(String json) {
-		return null;
+		if (DataUtils.checkDataType(json) != DataType.JSON) {
+			throw new InputMismatchException(
+					"Input String is not in JSON format");
+		}
+		return buildXSPFromJSON(json, ",");
 	}
 
 	/**
@@ -87,7 +98,11 @@ public class Converter {
 	 *         example: "COLUMN1\tCOLUMN2\ndataX1\tdataX2\ndataY1\tdataY2"
 	 */
 	public String jsonToTsv(String json) {
-		return null;
+		if (DataUtils.checkDataType(json) != DataType.JSON) {
+			throw new InputMismatchException(
+					"Input String is not in JSON format");
+		}
+		return buildXSPFromJSON(json, "\t");
 	}
 
 	/**
@@ -100,6 +115,10 @@ public class Converter {
 	 *         example: "COLUMN1\tCOLUMN2\ndataX1\tdataX2\ndataY1\tdataY2"
 	 */
 	public String csvToTsv(String csv) {
+		if (DataUtils.checkDataType(csv) != DataType.CSV) {
+			throw new InputMismatchException(
+					"Input String is not in CSV format");
+		}
 		return csv.replaceAll("\t", " ").replaceAll(",", "\t");
 	}
 
@@ -114,6 +133,10 @@ public class Converter {
 	 *         For example: "COLUMN1,COLUMN2\ndataX1,dataX2\ndataY1,dataY2"
 	 */
 	public String tsvToCsv(String tsv) {
+		if (DataUtils.checkDataType(tsv) != DataType.TSV) {
+			throw new InputMismatchException(
+					"Input String is not in TSV format");
+		}
 		return tsv.replaceAll(",", " ").replaceAll("\t", ",");
 	}
 
@@ -136,4 +159,45 @@ public class Converter {
 		return array;
 	}
 
+	private String buildXSPFromJSON(String json, String separator) {
+
+		Pattern pattern = Pattern.compile("\\{(.*?)\\}");
+		Matcher matcher = pattern.matcher(json);
+
+		StringBuilder output = new StringBuilder();
+
+		Set<String> properties = new TreeSet<String>();
+		while (matcher.find()) {
+			String[] pairs = matcher.group(1).split(",");
+			for (String pair : pairs) {
+				properties.add(pair.split(":")[0].replaceAll("\"", ""));
+			}
+		}
+
+		Iterator<String> it = properties.iterator();
+		while (it.hasNext()) {
+			output.append(it.next()).append(separator);
+		}
+		output.setLength(output.length() - 1);
+		output.append("\n");
+
+		matcher = pattern.matcher(json);
+		while (matcher.find()) {
+			String[] pairs = matcher.group(1).split(",");
+			Map<String, String> map = new HashMap<String, String>();
+			for (String pair : pairs) {
+				String[] pairArray = pair.split(":");
+				map.put(pairArray[0].replace("\"", ""), pairArray[1]);
+			}
+			it = properties.iterator();
+			while (it.hasNext()) {
+				output.append(map.get(it.next())).append(separator);
+			}
+			output.setLength(output.length() - 1);
+			output.append("\n");
+		}
+		output.setLength(output.length() - 1);
+
+		return output.toString();
+	}
 }
